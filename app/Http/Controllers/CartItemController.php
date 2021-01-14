@@ -5,17 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class ProductController extends Controller
+class CartItemController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index()
     {
-        DB::table('sbl_team_data')->where('id', 532)->decrement('win');
-        return response(123);
+        DB::table('carts')->get()->first();
     }
 
     /**
@@ -36,11 +35,15 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $this->getData();
-        $dataNew = $request->all();
-        $data->push(collect($dataNew));
-        dump($data);
-        return response($data);
+        $form = $request->all();
+        DB::table('cart_items')->insert([
+            'cart_id' => $form['cart_id'],
+            'product_id' => $form['product_id'],
+            'quantity' => $form['quantity'],
+            'updated_at' => now(),
+            'created_at' => now(),
+        ]);
+        return response()->json(true);
     }
 
     /**
@@ -75,11 +78,11 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $form = $request->all();
-        $data = $this->getData();
-        $selectData = $data->where('id', $id)->first();
-        $selectData = $selectData->merge(collect($form));
-
-        return response($selectData);
+        DB::table('cart_items')->where('id', $id)->update([
+            'quantity' => $form['quantity'],
+            'updated_at' => now()
+        ]);
+        return response()->json(true);
     }
 
     /**
@@ -90,34 +93,7 @@ class ProductController extends Controller
      */
     public function destroy($id)
     {
-        $data = $this->getData();
-        $data = $data->filter(function($product) use ($id){
-            return $product['id'] != $id;
-        });
-        return response($data->values());
-    }
-
-    public function getData()
-    {
-        return collect([
-            collect([
-                'id' => 0,
-                'title' => '測試商品一',
-                'content' => '這是很棒的商品',
-                'price' => 50
-            ]),
-            collect([
-                'id' => 1,
-                'title' => '測試商品二',
-                'content' => '這是有點棒的商品',
-                'price' => 30
-            ]),
-            collect([
-                'id' => 1,
-                'title' => '測試商品二',
-                'content' => '這是有點棒的商品',
-                'price' => 30
-            ])
-        ]);
+        DB::table('cart_items')->where('id', $id)->delete();
+        return response()->json(true);
     }
 }
