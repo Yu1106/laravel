@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateCartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,9 +34,9 @@ class CartItemController extends Controller
      * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(UpdateCartItem $request)
     {
-        $form = $request->all();
+        $form = $request->validated();
         DB::table('cart_items')->insert([
             'cart_id' => $form['cart_id'],
             'product_id' => $form['product_id'],
