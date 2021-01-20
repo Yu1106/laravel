@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateCartItem;
-use Illuminate\Http\Request;
+use App\Models\Cart;
+use App\Models\CartItem;
 use Illuminate\Support\Facades\DB;
 
 class CartItemController extends Controller
@@ -37,14 +38,12 @@ class CartItemController extends Controller
     public function store(UpdateCartItem $request)
     {
         $form = $request->validated();
-        DB::table('cart_items')->insert([
-            'cart_id' => $form['cart_id'],
+        $cart = Cart::find($form['cart_id']);
+        $result = $cart->cartItems()->create([
             'product_id' => $form['product_id'],
-            'quantity' => $form['quantity'],
-            'updated_at' => now(),
-            'created_at' => now(),
+            'quantity' => $form['quantity']
         ]);
-        return response()->json(true);
+        return response()->json($result);
     }
 
     /**
@@ -76,13 +75,11 @@ class CartItemController extends Controller
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateCartItem $request, $id)
     {
-        $form = $request->all();
-        DB::table('cart_items')->where('id', $id)->update([
-            'quantity' => $form['quantity'],
-            'updated_at' => now()
-        ]);
+        $form = $request->validated();
+        $item = CartItem::find($id);
+        $item->update(['quantity' => $form['quantity']]);
         return response()->json(true);
     }
 
@@ -94,7 +91,6 @@ class CartItemController extends Controller
      */
     public function destroy($id)
     {
-        DB::table('cart_items')->where('id', $id)->delete();
-        return response()->json(true);
+        CartItem::find($id)->delete();
     }
 }
