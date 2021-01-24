@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateCartItem;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
 class CartItemController extends Controller
@@ -38,9 +39,13 @@ class CartItemController extends Controller
     public function store(UpdateCartItem $request)
     {
         $form = $request->validated();
+        $product = Product::find($form['product_id']);
+        if (!$product->checkQuantity($form['quantity'])) {
+            return response($product->title . '數量不足', 400);
+        }
         $cart = Cart::find($form['cart_id']);
         $result = $cart->cartItems()->create([
-            'product_id' => $form['product_id'],
+            'product_id' => $product->id,
             'quantity' => $form['quantity']
         ]);
         return response()->json($result);

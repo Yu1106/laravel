@@ -10,6 +10,7 @@ class Cart extends Model
     use HasFactory;
 
     protected $guarded = [''];
+    private $rate = 1;
 
     public function CartItems()
     {
@@ -28,14 +29,25 @@ class Cart extends Model
 
     public function checkout()
     {
+        foreach ($this->cartItems as $cartItem) {
+            $product = $cartItem->product;
+            if (!$product->checkQuantity($cartItem->quantity)) {
+                return $product->title . '數量不足';
+            }
+        }
         $order = $this->order()->create([
             'user_id' => $this->user_id
         ]);
-        foreach ($this->cartItems as $cartItem){
+        if ($this->user->level == 2) {
+            $this->rate = 0.8;
+        }
+        foreach ($this->cartItems as $cartItem) {
             $order->orderItems()->create([
                 'order_id' => $order->id,
-                'product_id' => $cartItem->product_id
+                'product_id' => $cartItem->product_id,
+                'price' => $cartItem->product->price * $this->rate
             ]);
+            $cartItem->product->update(['quantity' => $cartItem->product->quantity - $cartItem->quantity]);
         }
         $this->update(['checkouted' => true]);
         $order->orderItems;
